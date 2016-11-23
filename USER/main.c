@@ -17,20 +17,35 @@
 const u8 TEXT_TO_SEND[]={"板卡扩展"};
 #define TEXT_LENTH  sizeof(TEXT_TO_SEND)-1			//TEXT_TO_SEND字符串长度(不包含结束符)
 u8 SendBuff[(TEXT_LENTH+2)*100];
-//len direct  cnt port query  config protocalVer  expand
-uint8_t frame_head[] =  {37,0,0,1,0,0,0,0};
-const u8 *test_to_uart="ENC28J60 TCP Client send data\r\n";
 
-uint8_t frame_head1[] = {11,0,0,1,0,1,0,0};
-uint8_t test_to_query[] = {11,0,0,1,1,0,0,0};
+											 //len direct cnt port query config protocalVer expand
+uint8_t frame_head[] =  {37,0,0,1,0,0,0,1};
+uint8_t frame_head_to_spi2[] =  {11,0,1,1,0,0,0,1};
+const u8 *test_to_uart="Test Data from spi1 to uart\r\n";
+const u8 *test_to_spi2="Test Data from spi1 to spi2\r\n";
+
+uint8_t frame_head1[] = {11,0,0,1,0,1,0,1};
+uint8_t test_to_query[] = {11,0,0,1,1,0,0,1};
 //baud prority
 uint8_t test_to_config[3] = {1,0,1};
 //uint8_t test_to_spi2[] = {};
-
+void test_send_to_spi2(void)
+{
+	uint8_t i,m = strlen((char*)test_to_spi2);
+	for(i = 0;i<8;i++)
+	{
+		EnQueue(cir_buf[4],frame_head_to_spi2[i]);
+	}
+	for(i = 0;i<m;i++)
+	{
+		EnQueue(cir_buf[4],*test_to_uart++);
+	}
+	InsertLink(QLinkList[4],m+8,(u32)cir_buf[4]->rear);
+}
 void test_query(void)
 {
 	uint8_t i,m = strlen((char*)test_to_uart);
-	for(;i<8;i++)
+	for(i = 0;i<8;i++)
 	{
 		EnQueue(cir_buf[4],test_to_query[i]);
 	}
@@ -39,7 +54,7 @@ void test_query(void)
 void test_config(uint8_t k)
 {
 	uint8_t i,m = strlen((char*)test_to_uart);
-	for(;i<8;i++)
+	for(i = 0;i<8;i++)
 	{
 		EnQueue(cir_buf[k+3],frame_head1[i]);
 	}
@@ -52,7 +67,7 @@ void test_config(uint8_t k)
 void test_send_to_uart(void)
 {
 	uint8_t i,m = strlen((char*)test_to_uart);
-	for(;i<8;i++)
+	for(i = 0;i<8;i++)
 	{
 		EnQueue(cir_buf[4],frame_head[i]);
 	}
@@ -69,10 +84,11 @@ void system_bsp_init(void)
 	LED_Init();
 	SPI1_Init();
 	SPI2_Init();
+	TIM3_Int_Init(72*100,0);
 	comm_mem_malloc();
 	memp_init();
 	
-	queue_init();
+	CirQueue_LinkList_init();
 	
 	uart_config();
 	delay_init();
@@ -83,27 +99,38 @@ int main(void)
 { 
 	uint8_t i = 0;
 	uint32_t cnt = 0;
+	uint8_t key_val = 0;
 	
 	system_bsp_init();
-//	test_config(1);
-//	test_send_to_uart();
-	test_query();
 	while(1)
 	{
+
+		/*数据查询与处理*/
 		for(i = 0; i < 6; i++){
+		/*按键选择功能*/
+		key_val = KEY_Scan(0);
+		if(key_val == WKUP_PRES){
+//			test_send_to_uart();
+			test_send_to_spi2();
+		}else if(key_val == KEY1_PRES){
+			test_query();
+		}else if(key_val == KEY0_PRES){
+			test_config(1);
+		}
+		
 			if(QLinkList[i]->next != NULL){
 				apply_layer_input(i);
 			}
 			if(QLinkList[i+6]->next != NULL){
 				apply_layer_output(i+6);
 			}
-			if(StartSPI2RecData_flag){
-				SPI2_ReadWriteByte(0xFF);
-			}
+//			if(StartSPI2RecData_flag){
+//				SPI2_ReadWriteByte(0xFF);
+//			}
 			if(i == 5){
 				i = 255;
 			}
-			
+		/*指示灯闪烁提示*/
 		cnt++;
 		if(cnt <= 100000){
 			LED0 = 0;

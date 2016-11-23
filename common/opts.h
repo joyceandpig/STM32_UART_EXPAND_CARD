@@ -24,8 +24,8 @@
 
 #define MEM_ALIGNMENT           4
 
-#define MEMP_BUF_LAYER_TYPE_NUM         2
-#define MEMP_BUF_LAYER_TYPE_SIZE        100
+#define MEMP_BUF_LAYER_TYPE_NUM         5
+#define MEMP_BUF_LAYER_TYPE_SIZE        512
 
 
 #endif

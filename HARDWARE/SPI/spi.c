@@ -2,6 +2,7 @@
 #include "dma.h"
 #include "common.h"
 #include "pbuf.h"
+#include "timer.h"
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供学习使用，未经作者许可，不得用于其它任何用途
 //Mini STM32开发板
@@ -20,6 +21,8 @@
 //SPI口初始化
 //这里针是对SPI1的初始化
 extern u8 spi1_getpack,spi2_getpack;
+uint8_t spi1_getdata_count = 0,spi2_getdata_count = 0;
+uint32_t tim3_count = 0;
 SPI_InitTypeDef  SPI_InitStructure;
 //SPI1 做 主机 初始化配置
 void SPI1_Init(void)
@@ -35,9 +38,10 @@ void SPI1_Init(void)
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
  	GPIO_SetBits(GPIOA,GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7);
+	
 	SPI_I2S_DeInit(SPI1); 
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;  //设置SPI单向或者双向的数据模式:SPI设置为双线双向全双工
-	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;		//设置SPI工作模式:设置为主SPI
+	SPI_InitStructure.SPI_Mode = SPI_Mode_Slave;		//设置SPI工作模式:设置为主SPI
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;		//设置SPI的数据大小:SPI发送接收8位帧结构
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;		//选择了串行时钟的稳态:时钟悬空高
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;	//数据捕获于第二个时钟沿
@@ -65,7 +69,7 @@ void SPI1_Init(void)
 //	DMA_Init_Config(spi1_tx);
 // 	SPI_I2S_DMACmd(SPI1,SPI_I2S_DMAReq_Tx,ENABLE);       //??DMA??
 } 
-//SPI2做 从机 初始化配置
+//SPI2做 主机 初始化配置
 void SPI2_Init(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
@@ -79,15 +83,11 @@ void SPI2_Init(void)
 		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP; //推挽复用
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIO_InitStructure);//实始化相关引脚
-    //GPIO_SetBits(GPIOB,GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);  //PB13/14/15上拉
-    /*配置SPI_NRF_SPI的片选CS引脚NSS GPIOB^12*/
-    //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12;
-    //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;//通用推挽输出
-    //GPIO_Init(GPIOB, &GPIO_InitStructure); 
+    GPIO_SetBits(GPIOB,GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15);  //PB13/14/15上拉
+
 		SPI_I2S_DeInit(SPI2);  //必须先disable，才能改变MODE
     SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;  //双线输入输出全双工模式
-    SPI_InitStructure.SPI_Mode = SPI_Mode_Slave;        //设置为SPI的主机模式
+    SPI_InitStructure.SPI_Mode = SPI_Mode_Master;        //设置为SPI的主机模式
     SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;        //SPI数据大小：发送8位帧数据结构
     SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;        //设备空闲状态时同步时钟SCK的状态，High表示高电平，Low表示低电平
     SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;    //时钟相位，1表示在同步时钟SCK的奇数沿边采样，2表示偶数沿边采样
@@ -137,46 +137,36 @@ void SPI2_SetSpeed(u8 SpeedSet)
   SPI_Init(SPI2, &SPI_InitStructure);
 	SPI_Cmd(SPI2,ENABLE);
 } 
+u8 SPI_ReadByte(SPI_TypeDef *spi)
+{
+	u8 retry=0;
+	while (SPI_I2S_GetFlagStatus(spi, SPI_I2S_FLAG_RXNE) == RESET)//检查指定的SPI标志位设置与否:接受缓存非空标志位
+	{
+	retry++;
+	if(retry>200)return 0;
+	}	  						    
+	return SPI_I2S_ReceiveData(spi); //返回通过SPIx最近接收的数据		
+}
 
 //SPIx 读写一个字节
 //TxData:要写入的字节
 //返回值:读取到的字节
-u8 SPI1_ReadWriteByte(u8 TxData)
+u8 SPI_ReadWriteByte(SPI_TypeDef *spi, u8 TxData)
 {		
 	u8 retry=0;				 	
-	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET) //检查指定的SPI标志位设置与否:发送缓存空标志位
+	while (SPI_I2S_GetFlagStatus(spi, SPI_I2S_FLAG_TXE) == RESET) //检查指定的SPI标志位设置与否:发送缓存空标志位
 		{
 		retry++;
 		if(retry>200)return 0;
 		}			  
-	SPI_I2S_SendData(SPI1, TxData); //通过外设SPIx发送一个数据
+	SPI_I2S_SendData(spi, TxData); //通过外设SPIx发送一个数据
 	retry=0;
-
-	while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_RXNE) == RESET)//检查指定的SPI标志位设置与否:接受缓存非空标志位
+	while (SPI_I2S_GetFlagStatus(spi, SPI_I2S_FLAG_RXNE) == RESET)//检查指定的SPI标志位设置与否:接受缓存非空标志位
 		{
 		retry++;
 		if(retry>200)return 0;
 		}	  						    
-	return SPI_I2S_ReceiveData(SPI1); //返回通过SPIx最近接收的数据					    
-}
-
-u8 SPI2_ReadWriteByte(u8 TxData)
-{		
-	u8 retry=0;				 	
-	while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE) == RESET) //检查指定的SPI标志位设置与否:发送缓存空标志位
-		{
-		retry++;
-		if(retry>200)return 0;
-		}			  
-	SPI_I2S_SendData(SPI2, TxData); //通过外设SPIx发送一个数据
-	retry=0;
-
-	while (SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE) == RESET)//检查指定的SPI标志位设置与否:接受缓存非空标志位
-		{
-		retry++;
-		if(retry>200)return 0;
-		}	  						    
-	return SPI_I2S_ReceiveData(SPI2); //返回通过SPIx最近接收的数据					    
+	return SPI_I2S_ReceiveData(spi); //返回通过SPIx最近接收的数据					    
 }
 
 void SPI_SendRec_Data(SPI_TypeDef *spi ,u8 data_num)
@@ -200,59 +190,71 @@ void SPI_SendRec_Data(SPI_TypeDef *spi ,u8 data_num)
 //	}
 	uint16_t len = data_num;
 	uint8_t  dat;
-	spi->DR;
-	while((spi->CR2 & SPI_I2S_FLAG_TXE) == 0);
-	if( spi == SPI1 ){
-		while(len--){
-			dat = DeQueue(cir_buf[spi1_tx]);
-			SPI1_ReadWriteByte(dat);
-		}
-	}else {
-		while(len--){
-			dat = DeQueue(cir_buf[spi2_tx]);
-			SPI2_ReadWriteByte(dat);
+	uint8_t device = 0;
+	
+	if(spi == SPI1){
+		device = spi1_tx;
+	}else if(spi == SPI2){
+		device = spi2_tx;
+	}
+	while(len--){
+		dat = DeQueue(cir_buf[device]);
+		SPI_ReadWriteByte(spi,dat);
+//		printf("spi send the %d byte %x of total %d data\r\n",data_num-len,dat,data_num);
+	}
+
+}
+//定时器3中断服务函数
+void TIM3_IRQHandler(void)
+{
+//	static u16 i = 0;
+	if(TIM_GetITStatus(TIM3,TIM_IT_Update)==SET) //溢出中断
+	{
+		if(tim3_count++> 2000)
+		{
+//			printf("spi1 get pack, total num: %d byte\r\n",spi1_getdata_count);
+//			for(;i< spi1_getdata_count;i++){
+//				printf("the %d rec data is: %x\r\n",i,(u8)(*(u32 *)((u32)(cir_buf[spi1_rx]->rear)+i)));
+//			}
+//			i = 0;
+			InsertLink(QLinkList[spi1_rx],spi1_getdata_count,cir_buf[spi1_rx]->rear);
+			spi1_getdata_count = 0;
+			TIM_Cmd(TIM3,DISABLE);
+			tim3_count = 0;
 		}
 	}
+	TIM_ClearITPendingBit(TIM3,TIM_IT_Update);  //清除中断标志位
 }
-
+#include "led.h"
 void SPI1_IRQHandler(void)
 {         
 	static u8 dat;
-	static uint16_t dat_rec_count = 0;
-	if(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_RXNE)==SET){         
-		dat = SPI_I2S_ReceiveData(SPI1);
+	LED1 = 0;
+	if(SPI_I2S_GetFlagStatus(SPI1,SPI_I2S_FLAG_RXNE)==SET){
+		
+		TIM_Cmd(TIM3,DISABLE);
+		TIM_SetCounter(TIM3,0);
+		TIM_Cmd(TIM3,ENABLE);
+		
+		
+		dat = SPI_ReadByte(SPI1);
+//		SPI_ReadWriteByte(SPI1,0xFF);
+		
 		EnQueue(cir_buf[spi1_rx],dat);
-#if FRAME_START_SIGN_EN
-		if(*(cir_buf[spi2_rx]->front-1) == FRAME_START_SIGN2 && *(cir_buf[spi2_rx]->front-2) == FRAME_START_SIGN1) 
-		{
-			DeQueue(cir_buf[spi1_rx]);
-#endif
-			dat_rec_count++;
-			if(*cir_buf[spi1_rx]->rear == 0x0D && *(cir_buf[spi1_rx]->rear-1) == 0x0A){
-			received_buffer_flag |= 0x20;
-			DeQueue(cir_buf[spi1_rx]);
-			DeQueue(cir_buf[spi1_rx]);
-			InsertLink(QLinkList[spi1_rx],dat_rec_count-2,cir_buf[spi1_rx]->front);
-			dat_rec_count = 0;
-		}
-#if FRAME_START_SIGN_EN
-		}
-#endif
-	}    
+		spi1_getdata_count++;
+		
+	}   
+	LED1 = 1;	
 }
 void SPI2_IRQHandler(void)
 {         
 	static u8 dat;
 	static uint16_t dat_send_count = 0;
 	if(SPI_I2S_GetFlagStatus(SPI2,SPI_I2S_FLAG_RXNE)==SET){         
-		dat = SPI_I2S_ReceiveData(SPI2);
+		dat = SPI_ReadByte(SPI2);
 
 		EnQueue(cir_buf[spi2_rx],dat);
-#if FRAME_START_SIGN_EN
-		if(*(cir_buf[spi2_rx]->front-1) == FRAME_START_SIGN2 && *(cir_buf[spi2_rx]->front-2) == FRAME_START_SIGN1) 
-		{
-			DeQueue(cir_buf[spi2_rx]);
-#endif
+
 			dat_send_count++;
 			if(*(cir_buf[spi2_rx]->front-1) == 0x0D && *(cir_buf[spi2_rx]->front-2) == 0x0A){
 				received_buffer_flag |= 0x10;
@@ -261,36 +263,8 @@ void SPI2_IRQHandler(void)
 				InsertLink(QLinkList[spi2_rx],dat_send_count-2,cir_buf[spi2_rx]->front);
 				dat_send_count = 0;
 			}
-#if FRAME_START_SIGN_EN
-		}
-#endif
 	}    
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -14,3 +14,11 @@ base pro status:
 3.data pack judege and deal: test uart data and success
 4.uart rec with dma: test and success
 
+
+
+submit 1:
+1.fix EnQueue and DeQueue question, now it is opration the memory.
+2.use spi2 as master mode, send data to spi1 as slaver mode, and success receive data, then deal the rec data correct.
+3.the important tip: when use a board as spi master, other board as spi slaver, the interface must be sck--sck,miso--miso,mosi--mosi.
+  you can not received correct data pack if use the interface like this:sck--sck,mosi--miso,miso--mosi.
+

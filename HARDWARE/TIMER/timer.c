@@ -1,6 +1,5 @@
 #include "timer.h"
-#include "led.h"
-#include "lwip_comm.h"
+
 
 //////////////////////////////////////////////////////////////////////////////////	 
 //本程序只供学习使用，未经作者许可，不得用于其它任何用途
@@ -23,7 +22,7 @@
 //这里使用的是定时器3!
 void TIM3_Int_Init(u16 arr,u16 psc)
 {
-    TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
+  TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE); //时钟使能
@@ -44,15 +43,15 @@ void TIM3_Int_Init(u16 arr,u16 psc)
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ通道使能
 	NVIC_Init(&NVIC_InitStructure);  //初始化NVIC寄存器
 	
-	TIM_Cmd(TIM3, ENABLE);  //使能TIMx					 
+	TIM_Cmd(TIM3, DISABLE);  //使能TIMx					 
 }
 
-//定时器3中断服务函数
-void TIM3_IRQHandler(void)
-{
-	if(TIM_GetITStatus(TIM3,TIM_IT_Update)==SET) //溢出中断
-	{
-	
-	}
-	TIM_ClearITPendingBit(TIM3,TIM_IT_Update);  //清除中断标志位
-}
+////定时器3中断服务函数
+//void TIM3_IRQHandler(void)
+//{
+//	if(TIM_GetITStatus(TIM3,TIM_IT_Update)==SET) //溢出中断
+//	{
+//	
+//	}
+//	TIM_ClearITPendingBit(TIM3,TIM_IT_Update);  //清除中断标志位
+//}

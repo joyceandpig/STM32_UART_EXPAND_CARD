@@ -334,7 +334,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER,DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\STM32F10x_FWLib\inc;..\USER;..\CORE;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\FLASH;..\HARDWARE\SPI;..\HARDWARE\KEY;..\HARDWARE\DMA;..\USMART;..\MALLOC;..\common;..\HARDWARE\EXTI</IncludePath>
+              <IncludePath>..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\STM32F10x_FWLib\inc;..\USER;..\CORE;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\FLASH;..\HARDWARE\SPI;..\HARDWARE\KEY;..\HARDWARE\DMA;..\USMART;..\MALLOC;..\common;..\HARDWARE\EXTI;..\HARDWARE\TIMER</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -426,6 +426,11 @@
               <FileName>exti.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\EXTI\exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\TIMER\timer.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -531,6 +536,11 @@
               <FileName>stm32f10x_exti.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\STM32F10x_FWLib\src\stm32f10x_exti.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\STM32F10x_FWLib\src\stm32f10x_tim.c</FilePath>
             </File>
           </Files>
         </Group>
