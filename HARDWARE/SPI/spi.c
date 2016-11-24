@@ -124,19 +124,13 @@ void SPI2_Init(void)
 //SPI_BaudRatePrescaler_16  16分频  (SPI 4.5M@sys 72M)
 //SPI_BaudRatePrescaler_256 256分频 (SPI 281.25K@sys 72M)
 
-void SPI1_SetSpeed(u8 SpeedSet)
+void SPI1_SetSpeed(SPI_TypeDef *spi,u8 SpeedSet)
 {
 	SPI_InitStructure.SPI_BaudRatePrescaler = SpeedSet ;
-  SPI_Init(SPI1, &SPI_InitStructure);
-	SPI_Cmd(SPI1,ENABLE);
+  SPI_Init(spi, &SPI_InitStructure);
+	SPI_Cmd(spi,ENABLE);
 }  
-//SPI2速度设置函数
-void SPI2_SetSpeed(u8 SpeedSet)
-{
-	SPI_InitStructure.SPI_BaudRatePrescaler = SpeedSet ;
-  SPI_Init(SPI2, &SPI_InitStructure);
-	SPI_Cmd(SPI2,ENABLE);
-} 
+
 u8 SPI_ReadByte(SPI_TypeDef *spi)
 {
 	u8 retry=0;
@@ -147,7 +141,7 @@ u8 SPI_ReadByte(SPI_TypeDef *spi)
 	}	  						    
 	return SPI_I2S_ReceiveData(spi); //返回通过SPIx最近接收的数据		
 }
-uint8_t SPI2_WriteByte(SPI_TypeDef *spi,u8 data)
+uint8_t SPI_WriteByte(SPI_TypeDef *spi,u8 data)
 {
 	u8 retry=0;				 	
 	while (SPI_I2S_GetFlagStatus(spi, SPI_I2S_FLAG_TXE) == RESET) //检查指定的SPI标志位设置与否:发送缓存空标志位
@@ -180,23 +174,6 @@ u8 SPI_ReadWriteByte(SPI_TypeDef *spi, u8 TxData)
 
 void SPI_SendRec_Data(SPI_TypeDef *spi ,u8 data_num)
 {
-//	spi->DR;
-//	while((spi->CR2 & SPI_I2S_FLAG_TXE) == 0);
-//	if( spi == SPI1 ){
-//		DMA_SetCurrDataCounter(SPI1_TX_DMA_CHANNEL,data_num);
-//		DMA_SetCurrDataCounter(SPI1_RX_DMA_CHANNEL,data_num);
-//		DMA_Cmd(SPI1_TX_DMA_CHANNEL,ENABLE);
-//		DMA_Cmd(SPI1_RX_DMA_CHANNEL,ENABLE);
-//		DMA_ITConfig(SPI1_TX_DMA_CHANNEL,DMA_IT_TC,ENABLE);
-//		DMA_ITConfig(SPI1_RX_DMA_CHANNEL,DMA_IT_TC,ENABLE);
-//	}else {
-//		DMA_SetCurrDataCounter(SPI2_TX_DMA_CHANNEL,data_num);
-//		DMA_SetCurrDataCounter(SPI2_RX_DMA_CHANNEL,data_num);
-//		DMA_Cmd(SPI2_TX_DMA_CHANNEL,ENABLE);
-//		DMA_Cmd(SPI2_RX_DMA_CHANNEL,ENABLE);
-//		DMA_ITConfig(SPI2_TX_DMA_CHANNEL,DMA_IT_TC,ENABLE);
-//		DMA_ITConfig(SPI2_RX_DMA_CHANNEL,DMA_IT_TC,ENABLE);
-//	}
 	uint16_t len = data_num;
 	uint8_t  dat;
 	uint8_t device = 0;

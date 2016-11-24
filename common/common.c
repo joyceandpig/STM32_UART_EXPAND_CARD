@@ -146,7 +146,7 @@ ErrorStatus InsertLink(QueueLinkList linklist,uint16_t len, uint32_t start_pos)
 {
 	uint16_t i;
 	QueueLinkList p = linklist,q;
-	if(len == 0)return Failture;
+	if(len == 0 || p == NULL || start_pos == 0)return ERROR;
 	
 	while(p->next)
 	{
@@ -243,7 +243,7 @@ uint8_t DeQueue(SqQueue *Q)
 void ClearOfQueue(SqQueue *Q)
 {
 	memset(Q->queue_buf,'\0',MEMP_BUF_LAYER_TYPE_SIZE);
-	Q->front = Q->rear = Q->queue_buf;
+	Q->rear = Q->front;
 	Q->size = 0;
 }
 //input：环形队列名
@@ -290,8 +290,8 @@ void spi_send(device_type dev, uint16_t sendlen)
 	if(dev == spi1_tx){
 		GPIO_SetBits(GPIOA,GPIO_Pin_12);//拉高主机中断线，告诉主机有数据回传，使主机提供时钟
 		spi1_feedback_len = sendlen;
-		SPI2_WriteByte(SPI1,spi1_feedback_len);
-//		SPI2_WriteByte(SPI1,sendlen);
+		SPI_WriteByte(SPI1,spi1_feedback_len);
+//		SPI_WriteByte(SPI1,sendlen);
 //		SPI_SendRec_Data(SPI1,sendlen);
 		GPIO_ResetBits(GPIOA,GPIO_Pin_12);//拉低主机中断线，告诉主机数据传输完成，使主机断开时钟
 	}else if(dev == spi2_tx){
@@ -552,11 +552,13 @@ void apply_layer_input(device_type data_pack_src_dev)
 		apply_layer_ctl(destination_dev_port,pre_pbuf);
 	}else{
 		if(*(u8*)QLinkList[data_pack_src_dev]->next->start_postion == 0xFF){
-			*(u8*)QLinkList[data_pack_src_dev]->next->start_postion = 0;
+//			*(u8*)QLinkList[data_pack_src_dev]->next->start_postion = 0;
 				
 				dat = DeQueue(cir_buf[spi1_tx]);
-				SPI2_WriteByte(SPI1,dat);
-			
+				DeQueue(cir_buf[spi1_rx]);
+				GPIO_SetBits(GPIOA,GPIO_Pin_12);
+				SPI_WriteByte(SPI1,dat);
+				GPIO_ResetBits(GPIOA,GPIO_Pin_12);
 		}
 		DeleteLink(QLinkList[spi1_rx]);
 	}

@@ -27,4 +27,7 @@ submit 2:
 1.fix some question about resend to uart data maybe occour error pack data in a frame. the most is the point which point to send string, it is addself after send one pack, then overflow the sendstring limits. now use another point to the send string start addr,and take data use another point self add.
 2.use spi2 as master mode, use spi1 as slaver mode, spi1 send a byte data to spi2 success.
 
+submit 3:
+1.correctly send spi slaver data to spi master, but send more than one can make error
+2.fix spi master reveived data from spi slaver code
 

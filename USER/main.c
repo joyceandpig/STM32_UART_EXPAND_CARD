@@ -13,7 +13,7 @@
 #include "exti.h"
 //成都淞幸科技有限责任公司
 //串口板卡扩展代码
-
+extern spi1_getpack,spi2_getpack;
 const u8 TEXT_TO_SEND[]={"板卡扩展"};
 #define TEXT_LENTH  sizeof(TEXT_TO_SEND)-1			//TEXT_TO_SEND字符串长度(不包含结束符)
 u8 SendBuff[(TEXT_LENTH+2)*100];
@@ -23,6 +23,7 @@ uint8_t frame_head[] =  {37,0,1,1,0,0,0,1};
 uint8_t frame_head_to_spi2[] =  {11,0,1,1,0,0,0,1};
 const u8 *test_to_uart="Test Data from spi2 to uart\r\n";
 const u8 *test_to_spi2="Test Data from spi1 to spi2\r\n";
+const u8 *uart_to_spi1="Test Data from uart to spi1\r\n";
 
 uint8_t frame_head_config[] = {11,0,1,1,0,1,0,1};
 uint8_t test_to_query[] =     {11,0,1,1,1,0,0,1};
@@ -42,6 +43,17 @@ void test_send_to_spi2(void)
 		EnQueue(cir_buf[4],*p++);
 	}
 	InsertLink(QLinkList[4],m+8,(u32)cir_buf[4]->rear);
+}
+void test_uart_to_spi1(void)
+{
+	uint8_t i,m = strlen((char*)uart_to_spi1);
+	uint8_t *p = (u8*)uart_to_spi1;
+
+	for(i = 0;i<m;i++)
+	{
+		EnQueue(cir_buf[0],*p++);
+	}
+	InsertLink(QLinkList[0],m,(u32)cir_buf[0]->rear);
 }
 void test_query(void)
 {
@@ -116,7 +128,8 @@ int main(void)
 		key_val = KEY_Scan(0);
 		if(key_val == WKUP_PRES){
 //			test_send_to_uart();
-			test_send_to_spi2();
+//			test_send_to_spi2();
+			test_uart_to_spi1();
 		}else if(key_val == KEY1_PRES){
 			test_query();
 		}else if(key_val == KEY0_PRES){
@@ -126,22 +139,33 @@ int main(void)
 			if(QLinkList[i]->next != NULL){
 				apply_layer_input(i);
 			}
-			if(QLinkList[i+6]->next != NULL){
-				apply_layer_output(i+6);
+			if(QLinkList[i+uart1_tx]->next != NULL){
+				apply_layer_output(i+uart1_tx);
 			}
-//			if(StartSPI2RecData_flag){
-//				spi2_rec_len = SPI_ReadWriteByte(SPI2,0xFF);
-//				printf("spi2 rec len :%d\r\n",spi2_rec_len);
-//				delay_ms(10);
-//				for(j = 0; j < spi2_rec_len;j++){
-//					spi2_rec_val = SPI_ReadWriteByte(SPI2,0xFF);
-//					printf("spi2 received data is: %x \r\n",spi2_rec_val);
-//					delay_ms(10);
-////					EnQueue(cir_buf[spi2_rx],spi2_rec_val);
-//				}
-////				InsertLink(QLinkList[spi2_rx],spi2_rec_val,(u32)(cir_buf[spi2_rx]->rear));
-//				StartSPI2RecData_flag = 0;
-//			}
+			if(StartSPI2RecData_flag){
+				//get spi slaver send length
+				//according length to read data from spi slaver and save 
+				//end spi slaver feedback
+				if(!spi2_getpack){
+					spi2_rec_len = SPI_ReadWriteByte(SPI2,0xFF);
+					printf("spi2 rec len :%d\r\n",spi2_rec_len);
+				}
+				if(spi2_getpack){
+					if(j++ == spi2_rec_len){
+						spi2_getpack = 0;
+						j = 0;
+						goto out;
+					}
+					spi2_rec_val = SPI_ReadWriteByte(SPI2,0xFF);
+					usart_send(0,spi2_rec_val);
+//					printf("spi2 received %d data is: %x \r\n",j,spi2_rec_val);
+					EnQueue(cir_buf[spi2_rx],spi2_rec_val);
+
+//				InsertLink(QLinkList[spi2_rx],spi2_rec_val,(u32)(cir_buf[spi2_rx]->rear));
+				}
+				spi2_getpack = 1;
+out:		StartSPI2RecData_flag = 0;
+			}
 			if(i == 5){
 				i = 255;
 			}

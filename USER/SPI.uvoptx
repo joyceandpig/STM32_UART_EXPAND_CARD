@@ -181,9 +181,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>554</LineNumber>
+          <LineNumber>551</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134238888</Address>
+          <Address>134238880</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -192,89 +192,202 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\SPI\../common/common.c\554</Expression>
+          <Expression>\\SPI\../common/common.c\551</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>116</LineNumber>
+          <LineNumber>476</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134218488</Address>
+          <Address>134238658</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\USER\main.c</Filename>
+          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\SPI\main.c\116</Expression>
+          <Expression>\\SPI\../common/common.c\476</Expression>
+        </Bp>
+        <Bp>
+          <Number>2</Number>
+          <Type>0</Type>
+          <LineNumber>498</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134238740</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\SPI\../common/common.c\498</Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
+          <Type>0</Type>
+          <LineNumber>293</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134237742</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\SPI\../common/common.c\293</Expression>
+        </Bp>
+        <Bp>
+          <Number>4</Number>
+          <Type>0</Type>
+          <LineNumber>558</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134238926</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\SPI\../common/common.c\558</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>cir_buf[4]</ItemText>
+          <ItemText>cir_buf[0]</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>QLinkList[4]</ItemText>
+          <ItemText>cir_buf[1]</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>1</WinNumber>
-          <ItemText>QLinkList[6]</ItemText>
+          <ItemText>cir_buf[2]</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>1</WinNumber>
-          <ItemText>cir_buf[6]</ItemText>
+          <ItemText>cir_buf[3]</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
-          <ItemText>cir_buf[11]</ItemText>
+          <ItemText>cir_buf[4]</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>1</WinNumber>
-          <ItemText>buf</ItemText>
+          <ItemText>cir_buf[5]</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>cir_buf[6]</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>cir_buf[7]</ItemText>
+        </Ww>
+        <Ww>
+          <count>8</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>cir_buf[8]</ItemText>
+        </Ww>
+        <Ww>
+          <count>9</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>cir_buf[9]</ItemText>
+        </Ww>
+        <Ww>
+          <count>10</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>cir_buf[10]</ItemText>
+        </Ww>
+        <Ww>
+          <count>11</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>cir_buf[11]</ItemText>
         </Ww>
       </WatchWindow1>
       <WatchWindow2>
         <Ww>
           <count>0</count>
           <WinNumber>2</WinNumber>
-          <ItemText>judge_p</ItemText>
+          <ItemText>QLinkList[0]</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>2</WinNumber>
-          <ItemText>cir_buf[10]</ItemText>
+          <ItemText>QLinkList[1]</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>2</WinNumber>
-          <ItemText>Assgin_p</ItemText>
+          <ItemText>QLinkList[2]</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>2</WinNumber>
-          <ItemText>uartpara[0]</ItemText>
+          <ItemText>QLinkList[3]</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>2</WinNumber>
+          <ItemText>QLinkList[4]</ItemText>
+        </Ww>
+        <Ww>
+          <count>5</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>QLinkList[5]</ItemText>
+        </Ww>
+        <Ww>
+          <count>6</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>QLinkList[6]</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>QLinkList[7]</ItemText>
+        </Ww>
+        <Ww>
+          <count>8</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>QLinkList[8]</ItemText>
+        </Ww>
+        <Ww>
+          <count>9</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>QLinkList[9]</ItemText>
+        </Ww>
+        <Ww>
+          <count>10</count>
+          <WinNumber>2</WinNumber>
           <ItemText>QLinkList[10]</ItemText>
+        </Ww>
+        <Ww>
+          <count>11</count>
+          <WinNumber>2</WinNumber>
+          <ItemText>QLinkList[11]</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x20008b78</ItemText>
+          <ItemText>0x2000979d</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>
@@ -460,7 +573,7 @@
 
   <Group>
     <GroupName>SYSTEM</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
