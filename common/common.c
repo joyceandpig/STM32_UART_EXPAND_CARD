@@ -26,7 +26,7 @@ static uint8_t expand = 0;
 struct pack_head *take_head = {0};
 
 static uint8_t query_baud = 0,query_priro = 0, query_subpriro = 0;
-
+uint8_t spi1_feedback_len = 0;
 
 //input：none
 //output：none
@@ -120,23 +120,23 @@ void LinkListInit(void)
 /**********************************环形缓冲队列初始化及管理链表初始化************************/
 void CirQueue_LinkList_init(void)
 {
-//	SqQueueInit();
-//	LinkListInit();
+	SqQueueInit();
+	LinkListInit();
 	
-	u8 i = 0;
-	for(; i < MAX_BUF_NUM;i++){
-		sq_init(&cir_buf[i]);
-		qlink_init(&QLinkList[i]);
-		
-		cir_buf[i]->size = 0;
-		cir_buf[i]->queue_buf = (uint32_t *)drive_queue_alloc(MEMP_uart1_pool+i/2);
-		(cir_buf[i]->front) = cir_buf[i]->queue_buf ;
-		(cir_buf[i]->rear) = cir_buf[i]->queue_buf ;
-		
-		QLinkList[i]->next = NULL;
-		QLinkList[i]->size = 0;
-		QLinkList[i]->start_postion = 0;
-	}
+//	u8 i = 0;
+//	for(; i < MAX_BUF_NUM;i++){
+//		sq_init(&cir_buf[i]);
+//		qlink_init(&QLinkList[i]);
+//		
+//		cir_buf[i]->size = 0;
+//		cir_buf[i]->queue_buf = (uint32_t *)drive_queue_alloc(MEMP_uart1_pool+i/2);
+//		(cir_buf[i]->front) = cir_buf[i]->queue_buf ;
+//		(cir_buf[i]->rear) = cir_buf[i]->queue_buf ;
+//		
+//		QLinkList[i]->next = NULL;
+//		QLinkList[i]->size = 0;
+//		QLinkList[i]->start_postion = 0;
+//	}
 }
 //input：管理链表名，本次插入数据的长度，该数据在buffer中的起始位置
 //output：success or faild
@@ -146,7 +146,7 @@ ErrorStatus InsertLink(QueueLinkList linklist,uint16_t len, uint32_t start_pos)
 {
 	uint16_t i;
 	QueueLinkList p = linklist,q;
-	
+	if(len == 0)return Failture;
 	
 	while(p->next)
 	{
@@ -284,12 +284,16 @@ void spi2_to_spi1(struct pbuf *judge_p)
 //output：none
 //descript：从指定的spi发送指定长度数据
 /***********************************SPI发送数据**************************/
+#include "delay.h"
 void spi_send(device_type dev, uint16_t sendlen)
 {
 	if(dev == spi1_tx){
-		GPIO_SetBits(GPIOA,GPIO_Pin_8);//拉高主机中断线，告诉主机有数据回传，使主机提供时钟
+		GPIO_SetBits(GPIOA,GPIO_Pin_12);//拉高主机中断线，告诉主机有数据回传，使主机提供时钟
+		spi1_feedback_len = sendlen;
+		SPI2_WriteByte(SPI1,spi1_feedback_len);
+//		SPI2_WriteByte(SPI1,sendlen);
 //		SPI_SendRec_Data(SPI1,sendlen);
-		GPIO_ResetBits(GPIOA,GPIO_Pin_8);//拉低主机中断线，告诉主机数据传输完成，使主机断开时钟
+		GPIO_ResetBits(GPIOA,GPIO_Pin_12);//拉低主机中断线，告诉主机数据传输完成，使主机断开时钟
 	}else if(dev == spi2_tx){
 		SPI_SendRec_Data(SPI2,sendlen);
 	}
@@ -413,16 +417,21 @@ u8 PackJudge(device_type *dev,struct pbuf *judge_p)
 /**************************************pbuf结构数据送至spi接口缓冲区***********************/
 void pbuf_to_spi(device_type dev,struct pbuf *presendbuf)
 {
-	uint32_t *p = (uint32_t *)presendbuf;
-	uint16_t len = presendbuf->head.framelength;
+	uint8_t i;
+	uint8_t *p = (uint8_t *)presendbuf;
+	uint16_t remin_len = presendbuf->head.framelength-8;
 	uint16_t count = 0;
 	
-
-	while(count++ < len)
+	p = p + 4;
+	for(i = 0; i< 8; i++){
+		EnQueue(cir_buf[dev],*p++);
+	}
+	p =p + 4;
+	while(count++ < remin_len)
 	{
 		EnQueue(cir_buf[dev],*p++);
 	}
-	InsertLink(QLinkList[dev], len ,(u32)cir_buf[dev]->rear);
+	InsertLink(QLinkList[dev], remin_len+8 ,(u32)cir_buf[dev]->rear);
 	pbuf_free(presendbuf);
 }	
 //input：dev：查询的数据端口，assgin_p：pbuf结构
@@ -431,8 +440,8 @@ void pbuf_to_spi(device_type dev,struct pbuf *presendbuf)
 void query_uart_data_take(device_type dev, struct pbuf *Assgin_p)
 {
 	Assgin_p->payload[0] = uartpara[dev].buadrate;
-	Assgin_p->payload[1] = uartpara[dev].preemptionpriority;
-	Assgin_p->payload[2] = uartpara[dev].subpriority;
+	*(u32*)((u32)(Assgin_p->payload)+1) = uartpara[dev].preemptionpriority;
+	*(u32*)((u32)(Assgin_p->payload)+2) = uartpara[dev].subpriority;
 	Assgin_p->head.framelength += 3;
 	Assgin_p->head.Query = 0;
 }
@@ -454,10 +463,10 @@ void AssignOpration(u8 order,device_type dev,struct pbuf *Assgin_p)
 			uartpara[dev-6].preemptionpriority = *((u32*)((u32)Assgin_p->payload+1));
 			uartpara[dev-6].subpriority = *((u32*)(((u32)Assgin_p->payload+2)));
 			uart_init(COM_USART[dev-6],uartpara[dev-6].buadrate,uartpara[dev-6].preemptionpriority,uartpara[dev-6].subpriority);
-			printf("uart config success!\r\n");
+			printf("uart config baud = 9600 success!\r\n");
 		break;
 		case 2://查询参数
-			query_uart_data_take(dev,Assgin_p);
+			query_uart_data_take(dev-6,Assgin_p);
 			pbuf_to_spi(spi1_tx,Assgin_p);
 			break;
 		case 3://转发至串口
@@ -537,9 +546,20 @@ void apply_layer_input(device_type data_pack_src_dev)
 {
 	struct pbuf *pre_pbuf = NULL;
 	device_type destination_dev_port;
-	
-	destination_dev_port = apply_layer_getdata(data_pack_src_dev,&pre_pbuf);
-	apply_layer_ctl(destination_dev_port,pre_pbuf);
+	uint8_t dat;
+	if(QLinkList[data_pack_src_dev]->next->size >= 8){
+		destination_dev_port = apply_layer_getdata(data_pack_src_dev,&pre_pbuf);
+		apply_layer_ctl(destination_dev_port,pre_pbuf);
+	}else{
+		if(*(u8*)QLinkList[data_pack_src_dev]->next->start_postion == 0xFF){
+			*(u8*)QLinkList[data_pack_src_dev]->next->start_postion = 0;
+				
+				dat = DeQueue(cir_buf[spi1_tx]);
+				SPI2_WriteByte(SPI1,dat);
+			
+		}
+		DeleteLink(QLinkList[spi1_rx]);
+	}
 }
 //input：output_dev_port：输出数据端口号
 //output：none

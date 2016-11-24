@@ -18,7 +18,13 @@ base pro status:
 
 submit 1:
 1.fix EnQueue and DeQueue question, now it is opration the memory.
-2.use spi2 as master mode, send data to spi1 as slaver mode, and success receive data, then deal the rec data correct.
+2.use spi2 as master mode, send data to spi1 as slaver mode, and spi1 success receive data, then deal the rec data correct.
 3.the important tip: when use a board as spi master, other board as spi slaver, the interface must be sck--sck,miso--miso,mosi--mosi.
   you can not received correct data pack if use the interface like this:sck--sck,mosi--miso,miso--mosi.
+
+ 
+submit 2:
+1.fix some question about resend to uart data maybe occour error pack data in a frame. the most is the point which point to send string, it is addself after send one pack, then overflow the sendstring limits. now use another point to the send string start addr,and take data use another point self add.
+2.use spi2 as master mode, use spi1 as slaver mode, spi1 send a byte data to spi2 success.
+
 

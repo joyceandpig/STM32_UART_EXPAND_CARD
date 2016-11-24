@@ -181,25 +181,25 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>214</LineNumber>
+          <LineNumber>554</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134220146</Address>
+          <Address>134238888</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
           <SizeOfObject>0</SizeOfObject>
           <BreakByAccess>0</BreakByAccess>
           <BreakIfRCount>1</BreakIfRCount>
-          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\HARDWARE\SPI\spi.c</Filename>
+          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\SPI\../HARDWARE/SPI/spi.c\214</Expression>
+          <Expression>\\SPI\../common/common.c\554</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>122</LineNumber>
+          <LineNumber>116</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134218516</Address>
+          <Address>134218488</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -208,23 +208,7 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\USER\main.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\SPI\main.c\122</Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
-          <LineNumber>201</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134220068</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\HARDWARE\SPI\spi.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\SPI\../HARDWARE/SPI/spi.c\201</Expression>
+          <Expression>\\SPI\main.c\116</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -251,7 +235,7 @@
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
-          <ItemText>cir_buf[1]</ItemText>
+          <ItemText>cir_buf[11]</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
@@ -268,7 +252,7 @@
         <Ww>
           <count>1</count>
           <WinNumber>2</WinNumber>
-          <ItemText>cir_buf[11]</ItemText>
+          <ItemText>cir_buf[10]</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
@@ -283,14 +267,14 @@
         <Ww>
           <count>4</count>
           <WinNumber>2</WinNumber>
-          <ItemText>QLinkList[11]</ItemText>
+          <ItemText>QLinkList[10]</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x20009578</ItemText>
+          <ItemText>0x20008b78</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>
@@ -340,7 +324,7 @@
 
   <Group>
     <GroupName>USER</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>
@@ -476,7 +460,7 @@
 
   <Group>
     <GroupName>SYSTEM</GroupName>
-    <tvExp>1</tvExp>
+    <tvExp>0</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

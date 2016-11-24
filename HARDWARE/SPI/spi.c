@@ -106,7 +106,7 @@ void SPI2_Init(void)
 		NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;  
 		NVIC_Init(&NVIC_InitStructure); 
 		
-		SPI_I2S_ITConfig(SPI2,SPI_I2S_IT_RXNE,ENABLE);
+//		SPI_I2S_ITConfig(SPI2,SPI_I2S_IT_RXNE,ENABLE);
 		
     SPI_Init(SPI2, &SPI_InitStructure);  //初始化SPI2的配置项
 		SPI_Cmd(SPI2, ENABLE); //使能SPI2   
@@ -147,7 +147,16 @@ u8 SPI_ReadByte(SPI_TypeDef *spi)
 	}	  						    
 	return SPI_I2S_ReceiveData(spi); //返回通过SPIx最近接收的数据		
 }
-
+uint8_t SPI2_WriteByte(SPI_TypeDef *spi,u8 data)
+{
+	u8 retry=0;				 	
+	while (SPI_I2S_GetFlagStatus(spi, SPI_I2S_FLAG_TXE) == RESET) //检查指定的SPI标志位设置与否:发送缓存空标志位
+	{
+		retry++;
+		if(retry>200)return 0;
+	}			  
+	SPI_I2S_SendData(spi, data); //通过外设SPIx发送一个数据
+}
 //SPIx 读写一个字节
 //TxData:要写入的字节
 //返回值:读取到的字节
@@ -210,7 +219,7 @@ void TIM3_IRQHandler(void)
 //	static u16 i = 0;
 	if(TIM_GetITStatus(TIM3,TIM_IT_Update)==SET) //溢出中断
 	{
-		if(tim3_count++> 2000)
+		if(tim3_count++> 50)
 		{
 //			printf("spi1 get pack, total num: %d byte\r\n",spi1_getdata_count);
 //			for(;i< spi1_getdata_count;i++){
@@ -237,12 +246,13 @@ void SPI1_IRQHandler(void)
 		TIM_Cmd(TIM3,ENABLE);
 		
 		
-		dat = SPI_ReadByte(SPI1);
-//		SPI_ReadWriteByte(SPI1,0xFF);
 		
+//		SPI_ReadWriteByte(SPI1,0xFF);
+		dat = SPI_ReadByte(SPI1);
+//		printf("spi1 rec data is: %x\r\n",dat);
 		EnQueue(cir_buf[spi1_rx],dat);
 		spi1_getdata_count++;
-		
+
 	}   
 	LED1 = 1;	
 }
@@ -254,15 +264,7 @@ void SPI2_IRQHandler(void)
 		dat = SPI_ReadByte(SPI2);
 
 		EnQueue(cir_buf[spi2_rx],dat);
-
-			dat_send_count++;
-			if(*(cir_buf[spi2_rx]->front-1) == 0x0D && *(cir_buf[spi2_rx]->front-2) == 0x0A){
-				received_buffer_flag |= 0x10;
-				DeQueue(cir_buf[spi2_rx]);
-				DeQueue(cir_buf[spi2_rx]);
-				InsertLink(QLinkList[spi2_rx],dat_send_count-2,cir_buf[spi2_rx]->front);
-				dat_send_count = 0;
-			}
+		InsertLink(QLinkList[spi2_rx],dat_send_count,cir_buf[spi2_rx]->front);
 	}    
 }
 
