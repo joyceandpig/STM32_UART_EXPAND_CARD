@@ -236,7 +236,14 @@ void uart_dma_send_data(UartCom com,u8 len)
 	MY_UART_DMA_SEND_ENABLE( (device_type)com*2,len);
 }
 
-u16 pre_remain_count = MEMP_BUF_LAYER_TYPE_SIZE,cur_count = MEMP_BUF_LAYER_TYPE_SIZE;
+u16 pre_remain_count[4] = {MEMP_BUF_LAYER_TYPE_SIZE,
+													MEMP_BUF_LAYER_TYPE_SIZE,
+													MEMP_BUF_LAYER_TYPE_SIZE,
+													MEMP_BUF_LAYER_TYPE_SIZE},
+cur_count[4] = {MEMP_BUF_LAYER_TYPE_SIZE,
+								MEMP_BUF_LAYER_TYPE_SIZE,
+								MEMP_BUF_LAYER_TYPE_SIZE,
+								MEMP_BUF_LAYER_TYPE_SIZE};
 void USART1_IRQHandler(void)                	//串口1中断服务程序
 {
 	if(USART_GetITStatus(USART1, USART_IT_IDLE) != RESET)
@@ -245,14 +252,18 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 		USART1->SR;
 		USART1->DR;
 
-		cur_count = DMA_GetCurrDataCounter(UART1_RX_DMA_CHANNEL);
+		cur_count[com1] = DMA_GetCurrDataCounter(UART1_RX_DMA_CHANNEL);
 		
-		cir_buf[uart1_rx]->front = (u32*)((MEMP_BUF_LAYER_TYPE_SIZE-cur_count)+(u32)(cir_buf[uart1_rx]->front));
-		pre_remain_count = DMA_GetCurrDataCounter(UART1_RX_DMA_CHANNEL);
+		cir_buf[com1]->front = (u32 *)((u32)cir_buf[com1]->queue_buf\
+		+(((u32)cir_buf[com1]->front)+((pre_remain_count[com1]+MEMP_BUF_LAYER_TYPE_SIZE-cur_count[com1])%MEMP_BUF_LAYER_TYPE_SIZE)\
+		- (u32)cir_buf[com1]->queue_buf)%MEMP_BUF_LAYER_TYPE_SIZE);
 		
-		cir_buf[uart1_rx]->size = ((u32)(cir_buf[uart1_rx]->front)- (u32)(cir_buf[uart1_rx]->rear) + MEMP_BUF_LAYER_TYPE_SIZE)%MEMP_BUF_LAYER_TYPE_SIZE;
+//		cir_buf[uart1_rx]->front = (u32*)((pre_remain_count+MEMP_BUF_LAYER_TYPE_SIZE-cur_count)%MEMP_BUF_LAYER_TYPE_SIZE+(u32)(cir_buf[uart1_rx]->front));
+		pre_remain_count[com1] = DMA_GetCurrDataCounter(UART1_RX_DMA_CHANNEL);
 		
-		InsertLink(QLinkList[uart1_rx],cir_buf[uart1_rx]->size,(u32)cir_buf[uart1_rx]->rear);
+		cir_buf[com1]->size = ((u32)(cir_buf[com1]->front)- (u32)(cir_buf[com1]->rear) + MEMP_BUF_LAYER_TYPE_SIZE)%MEMP_BUF_LAYER_TYPE_SIZE;
+		
+		InsertLink(QLinkList[com1],cir_buf[com1]->size,(u32)cir_buf[com1]->rear);
 		USART_ClearITPendingBit(USART1, USART_IT_IDLE);//空闲
 		received_buffer_flag |= 0x8;
 		DMA_Cmd(UART1_RX_DMA_CHANNEL,ENABLE);
@@ -268,10 +279,14 @@ void USART2_IRQHandler(void)
 		USART2->SR;
 		USART2->DR;
 
-		cur_count = DMA_GetCurrDataCounter(UART2_RX_DMA_CHANNEL);
+		cur_count[com2] = DMA_GetCurrDataCounter(UART2_RX_DMA_CHANNEL);
 		
-		cir_buf[com2]->front = (uint32_t *)(( *cir_buf[com2]->front + 512 - cur_count)%(* cir_buf[com2]->queue_buf));
-		pre_remain_count = DMA_GetCurrDataCounter(UART2_RX_DMA_CHANNEL);
+		cir_buf[com2]->front = (u32 *)((u32)cir_buf[com2]->queue_buf\
+		+(((u32)cir_buf[com2]->front)+((pre_remain_count[com2]+MEMP_BUF_LAYER_TYPE_SIZE-cur_count[com2])%MEMP_BUF_LAYER_TYPE_SIZE)\
+		- (u32)cir_buf[com2]->queue_buf)%MEMP_BUF_LAYER_TYPE_SIZE);
+		
+//		cir_buf[com2]->front = (uint32_t *)(( *cir_buf[com2]->front + 512 - cur_count)%(* cir_buf[com2]->queue_buf));
+		pre_remain_count[com2] = DMA_GetCurrDataCounter(UART2_RX_DMA_CHANNEL);
 		
 		cir_buf[com2]->size = (*(cir_buf[com2]->front)- *(cir_buf[com2]->rear) + 512)%512;
 		USART_ClearITPendingBit(USART2, USART_IT_IDLE);//空闲
@@ -287,10 +302,14 @@ void USART3_IRQHandler(void)
 		USART3->SR;
 		USART3->DR;
 
-		cur_count = DMA_GetCurrDataCounter(UART3_RX_DMA_CHANNEL);
+		cur_count[com3] = DMA_GetCurrDataCounter(UART3_RX_DMA_CHANNEL);
 		
-		cir_buf[com3]->front = (uint32_t *)(( *cir_buf[com3]->front + 512 - cur_count)%(* cir_buf[com3]->queue_buf));
-		pre_remain_count = DMA_GetCurrDataCounter(UART3_RX_DMA_CHANNEL);
+		cir_buf[com3]->front = (u32 *)((u32)cir_buf[com3]->queue_buf\
+		+(((u32)cir_buf[com3]->front)+((pre_remain_count[com3]+MEMP_BUF_LAYER_TYPE_SIZE-cur_count[com3])%MEMP_BUF_LAYER_TYPE_SIZE)\
+		- (u32)cir_buf[com3]->queue_buf)%MEMP_BUF_LAYER_TYPE_SIZE);
+		
+//		cir_buf[com3]->front = (uint32_t *)(( *cir_buf[com3]->front + 512 - cur_count)%(* cir_buf[com3]->queue_buf));
+		pre_remain_count[com3] = DMA_GetCurrDataCounter(UART3_RX_DMA_CHANNEL);
 		
 		cir_buf[com3]->size = (*(cir_buf[com3]->front)- *(cir_buf[com3]->rear) + 512)%512;
 		USART_ClearITPendingBit(USART3, USART_IT_IDLE);//空闲
@@ -306,10 +325,14 @@ void USART4_IRQHandler(void)
 		UART4->SR;
 		UART4->DR;
 
-		cur_count = DMA_GetCurrDataCounter(UART4_RX_DMA_CHANNEL);
+		cur_count[com4] = DMA_GetCurrDataCounter(UART4_RX_DMA_CHANNEL);
 		
-		cir_buf[com4]->front = (uint32_t *)(( *cir_buf[com4]->front + 512 - cur_count)%(* cir_buf[com4]->queue_buf));
-		pre_remain_count = DMA_GetCurrDataCounter(UART4_RX_DMA_CHANNEL);
+		cir_buf[com4]->front = (u32 *)((u32)cir_buf[com4]->queue_buf\
+		+(((u32)cir_buf[com4]->front)+((pre_remain_count[com4]+MEMP_BUF_LAYER_TYPE_SIZE-cur_count[com4])%MEMP_BUF_LAYER_TYPE_SIZE)\
+		- (u32)cir_buf[com4]->queue_buf)%MEMP_BUF_LAYER_TYPE_SIZE);
+		
+//		cir_buf[com4]->front = (uint32_t *)(( *cir_buf[com4]->front + 512 - cur_count)%(* cir_buf[com4]->queue_buf));
+		pre_remain_count[com4] = DMA_GetCurrDataCounter(UART4_RX_DMA_CHANNEL);
 		
 		cir_buf[com4]->size = (*(cir_buf[com4]->front)- *(cir_buf[com4]->rear) + 512)%512;
 		USART_ClearITPendingBit(UART4, USART_IT_IDLE);//空闲

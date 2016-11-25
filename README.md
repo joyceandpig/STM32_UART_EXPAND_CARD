@@ -31,3 +31,9 @@ submit 3:
 1.correctly send spi slaver data to spi master, but send more than one can make error
 2.fix spi master reveived data from spi slaver code
 
+
+submit 4:
+1.fix uart reveive queue_buf front and size calculate method, now it is can be used normal
+2.use DeQueue method replace memcpy in the uart take data from uart queue to pbuf process. it is can solute the queue save data cycle.
+3.use DeQueue method replace memcpy in the spi take data from spi queue to pbuf process,is can be solute queue save data cycle.
+4. have a issues about send data to front expand card by use extern uart, when system deal a process about extern uart send data to the master but the process not be end, then send data use the same uart port to the front expand card, the front expand card may be received error length data, if repeat the send operation, sometimes the front expand card received correct data.     

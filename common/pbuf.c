@@ -3,7 +3,7 @@
 #include "sys.h"
 #include "memp.h"
 #include "stdio.h"
-
+#include "common.h"
 
 uint32_t drive_queue_alloc(memp_t type)
 {
@@ -48,15 +48,21 @@ err_t pbuf_encode(struct pbuf *buf, const void *dataptr, u16 len, struct pack_he
 {
 	struct pbuf *p = buf;
 	struct pack_head *hp = head;
-	u16 copy_len = len,rem_len;
+	u16 copy_len = len,rem_len,i;
+	u8 dat, *dp = ((u8*)p->payload);
 	rem_len = len;
+	
 	
 	head_encode(p,hp);
 	
-	for(;rem_len != 0;p=p->next)
-	{
-		memcpy(p->payload,dataptr,copy_len);
-		rem_len -= copy_len;
+//	for(;rem_len != 0;p=p->next)
+//	{
+//		memcpy(p->payload,dataptr,copy_len);
+//		rem_len -= copy_len;
+//	}
+	for(i = 0; i< len; i++){
+		dat = DeQueue(cir_buf[head->DevicePort]);
+		*dp++ = dat;
 	}
 }
 

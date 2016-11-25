@@ -56,22 +56,6 @@ u8 comm_mem_malloc(void)
 	}
 	return 0;	
 }
-//input：buffer管理链表
-//output：none
-//descript：初始化管理链表的头结点
-void qlink_init(QueueLinkList *L)
-{
-	(*L) = (QueueLink *)mymalloc(SRAMIN,sizeof(QueueLink));
-	(*L)->next = NULL;
-	(*L)->size = 0;
-}
-//input：环形缓冲buffer
-//output：none
-//descript：环形缓冲buffer的初始化
-void sq_init(Queue *L)
-{
-	(*L) = (SqQueue *)mymalloc(SRAMIN,sizeof(SqQueue));
-}
 SqQueue *QueueNew(void)
 {
 	SqQueue *p = NULL;
@@ -122,21 +106,6 @@ void CirQueue_LinkList_init(void)
 {
 	SqQueueInit();
 	LinkListInit();
-	
-//	u8 i = 0;
-//	for(; i < MAX_BUF_NUM;i++){
-//		sq_init(&cir_buf[i]);
-//		qlink_init(&QLinkList[i]);
-//		
-//		cir_buf[i]->size = 0;
-//		cir_buf[i]->queue_buf = (uint32_t *)drive_queue_alloc(MEMP_uart1_pool+i/2);
-//		(cir_buf[i]->front) = cir_buf[i]->queue_buf ;
-//		(cir_buf[i]->rear) = cir_buf[i]->queue_buf ;
-//		
-//		QLinkList[i]->next = NULL;
-//		QLinkList[i]->size = 0;
-//		QLinkList[i]->start_postion = 0;
-//	}
 }
 //input：管理链表名，本次插入数据的长度，该数据在buffer中的起始位置
 //output：success or faild
@@ -206,7 +175,7 @@ static uint8_t IsFull(SqQueue *Q)
 /******************************判定队列是否为空队列*****************************/
 static uint8_t IsEmpty(SqQueue *Q)
 {
-	return (Q->size <= 0)?TRUE:FALSE;
+	return (Q->size == 0)?TRUE:FALSE;
 }
 
 //input：Q：环形队列名，data：本次插入环形队列的数据
@@ -288,12 +257,11 @@ void spi2_to_spi1(struct pbuf *judge_p)
 void spi_send(device_type dev, uint16_t sendlen)
 {
 	if(dev == spi1_tx){
+//		printf("Set PA12 to send slaver length: %d\r\n",sendlen);
 		GPIO_SetBits(GPIOA,GPIO_Pin_12);//拉高主机中断线，告诉主机有数据回传，使主机提供时钟
-		spi1_feedback_len = sendlen;
-		SPI_WriteByte(SPI1,spi1_feedback_len);
-//		SPI_WriteByte(SPI1,sendlen);
-//		SPI_SendRec_Data(SPI1,sendlen);
+		SPI_WriteByte(SPI1,sendlen);
 		GPIO_ResetBits(GPIOA,GPIO_Pin_12);//拉低主机中断线，告诉主机数据传输完成，使主机断开时钟
+//		printf("Reset PA12 to send slaver lengthend\r\n");
 	}else if(dev == spi2_tx){
 		SPI_SendRec_Data(SPI2,sendlen);
 	}
@@ -358,6 +326,8 @@ device_type DataRec(device_type dev, struct pbuf **buf)
 {
 	u32 *p = NULL;
 	device_type dev_port_detination;
+	u16 i;
+	u8 *psrc = NULL,*pdes = NULL;
 	
 	(*buf) = (struct pbuf *)pbuf_alloc(512);//申请一个内存空间
 	(*buf)->next = NULL;
@@ -373,8 +343,19 @@ device_type DataRec(device_type dev, struct pbuf **buf)
 		myfree(SRAMIN ,take_head);
 		dev_port_detination = spi1_tx;
 	}else{
-		memcpy((u32*)&(*buf)->head,(u32*)QLinkList[dev]->next->start_postion,SIZEOF_STRUCT_PACKHEAD);//QLinkList[dev]->next->size);//将接收缓存数据拷备至新建内存空间
-		memcpy((*buf)->payload,(u32*)(QLinkList[dev]->next->start_postion+SIZEOF_STRUCT_PACKHEAD),QLinkList[dev]->next->size-SIZEOF_STRUCT_PACKHEAD);
+//		memcpy((u32*)&(*buf)->head,(u32*)QLinkList[dev]->next->start_postion,SIZEOF_STRUCT_PACKHEAD);//QLinkList[dev]->next->size);//将接收缓存数据拷备至新建内存空间
+//		memcpy((*buf)->payload,(u32*)(QLinkList[dev]->next->start_postion+SIZEOF_STRUCT_PACKHEAD),QLinkList[dev]->next->size-SIZEOF_STRUCT_PACKHEAD);
+		
+		pdes =  (u8*)&(*buf)->head;
+		for(i = 0; i < SIZEOF_STRUCT_PACKHEAD;i++){
+			*pdes++ = DeQueue(cir_buf[dev]);
+		}
+		pdes =  (u8*)&(*buf)->payload;
+		pdes += 4;
+		for(i = 0; i < (QLinkList[dev]->next->size-SIZEOF_STRUCT_PACKHEAD);i++){
+			*pdes++ = DeQueue(cir_buf[dev]);
+		}
+		
 		dev_port_detination = (*buf)->head.DevicePort+uart1_tx-1;
 		(*buf)->head.framelength = QLinkList[dev]->next->size;
 	}
@@ -547,20 +528,28 @@ void apply_layer_input(device_type data_pack_src_dev)
 	struct pbuf *pre_pbuf = NULL;
 	device_type destination_dev_port;
 	uint8_t dat;
-	if(QLinkList[data_pack_src_dev]->next->size >= 8){
+	
+	if(QLinkList[spi1_rx]->next->size<8){
+			GPIO_SetBits(GPIOA,GPIO_Pin_12);
+		if(*(u8*)QLinkList[data_pack_src_dev]->next->start_postion == 0xFF){
+				dat = DeQueue(cir_buf[spi1_tx]);
+				SPI_WriteByte(SPI1,dat);
+				DeleteLink(QLinkList[spi1_tx]);
+		}else if(*(u8*)QLinkList[data_pack_src_dev]->next->start_postion == 0xaa){
+			if(SPI1->DR != 0x00){
+				dat = DeQueue(cir_buf[spi1_tx]);
+				SPI_WriteByte(SPI1,dat);
+				DeleteLink(QLinkList[spi1_tx]);
+			}
+		}else{
+//			printf("spi1 rx fe not fill\r\n");
+		}
+		GPIO_ResetBits(GPIOA,GPIO_Pin_12);
+		DeQueue(cir_buf[spi1_rx]);
+		DeleteLink(QLinkList[spi1_rx]);
+	}else{
 		destination_dev_port = apply_layer_getdata(data_pack_src_dev,&pre_pbuf);
 		apply_layer_ctl(destination_dev_port,pre_pbuf);
-	}else{
-		if(*(u8*)QLinkList[data_pack_src_dev]->next->start_postion == 0xFF){
-//			*(u8*)QLinkList[data_pack_src_dev]->next->start_postion = 0;
-				
-				dat = DeQueue(cir_buf[spi1_tx]);
-				DeQueue(cir_buf[spi1_rx]);
-				GPIO_SetBits(GPIOA,GPIO_Pin_12);
-				SPI_WriteByte(SPI1,dat);
-				GPIO_ResetBits(GPIOA,GPIO_Pin_12);
-		}
-		DeleteLink(QLinkList[spi1_rx]);
 	}
 }
 //input：output_dev_port：输出数据端口号

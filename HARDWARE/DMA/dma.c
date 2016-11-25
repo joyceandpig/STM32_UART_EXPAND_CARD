@@ -100,8 +100,8 @@ u8 DMA_Init_Config(__IO uint8_t type )
 	
 	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;  //数据宽度为8位
 	DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte; //数据宽度为8位
-	DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;  //工作在正常缓存模式
-	DMA_InitStructure.DMA_Priority = DMA_Priority_Medium; //DMA通道 x拥有中优先级 
+	DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;  //工作在正常缓存模式
+	DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh; //DMA通道 x拥有中优先级 
 //	if(type > 7){
 //		DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh; //DMA通道 x拥有中优先级 
 //	}
