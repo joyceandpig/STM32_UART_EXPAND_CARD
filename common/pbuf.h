@@ -61,6 +61,13 @@ struct pbuf
 	struct pack_head head;//数据包头变量
 	u32 *payload;  //真实数据区地址
 };
+struct PBUF
+{
+	struct pbuf *pbuf;
+	u16 pbuf_size;
+	u8 dat_src_port;
+	u8 dat_dst_port;
+};
 
 
 #define SIZEOF_STRUCT_PBUF        LWIP_MEM_ALIGN_SIZE(sizeof(struct pbuf))

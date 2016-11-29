@@ -26,7 +26,7 @@ static uint8_t expand = 0;
 struct pack_head *take_head = {0};
 
 static uint8_t query_baud = 0,query_priro = 0, query_subpriro = 0;
-uint8_t spi1_feedback_len = 0;
+uint16_t spi1_feedback_len = 0;
 
 //input：none
 //output：none
@@ -257,9 +257,10 @@ void spi2_to_spi1(struct pbuf *judge_p)
 void spi_send(device_type dev, uint16_t sendlen)
 {
 	if(dev == spi1_tx){
+		spi1_feedback_len = sendlen;
 //		printf("Set PA12 to send slaver length: %d\r\n",sendlen);
 		GPIO_SetBits(GPIOA,GPIO_Pin_12);//拉高主机中断线，告诉主机有数据回传，使主机提供时钟
-		SPI_WriteByte(SPI1,sendlen);
+		SPI_WriteByte(SPI1,(u8)(sendlen>>8));
 		GPIO_ResetBits(GPIOA,GPIO_Pin_12);//拉低主机中断线，告诉主机数据传输完成，使主机断开时钟
 //		printf("Reset PA12 to send slaver lengthend\r\n");
 	}else if(dev == spi2_tx){
@@ -322,42 +323,32 @@ void reset_head(struct pack_head *head)
 //output：本次数据包需要作用的端口号
 //descript：数据接收（从buffer缓存至pbuf结构），并对pbuf进行填充。
 /****************************************数据接收判定与处理*********************/
-device_type DataRec(device_type dev, struct pbuf **buf)
+device_type DataRec(device_type dev, struct PBUF **buf)
 {
 	u32 *p = NULL;
 	device_type dev_port_detination;
 	u16 i;
 	u8 *psrc = NULL,*pdes = NULL;
 	
-	(*buf) = (struct pbuf *)pbuf_alloc(512);//申请一个内存空间
-	(*buf)->next = NULL;
-	*((*buf)->payload) = ((u32)(*buf)+SIZEOF_STRUCT_PACKHEAD+4);
-	p = (u32 *)*buf;
+	(*buf) = (struct PBUF*)mymalloc(SRAMIN,sizeof(struct PBUF));
+	(*buf)->pbuf = (struct pbuf *)pbuf_alloc(512);//申请一个内存空间
+	
+	(*buf)->pbuf->next = NULL;
+	(*buf)->dat_src_port = dev;
+	*((*buf)->pbuf->payload) = ((u32)((*buf)->pbuf)+SIZEOF_STRUCT_PACKHEAD+4);
+	p = (u32 *)((*buf)->pbuf);
+	
 	if(dev < spi1_rx){
 		take_head = (struct pack_head*)mymalloc(SRAMIN,SIZEOF_STRUCT_PACKHEAD);
 		reset_head(take_head);
 		take_head->DevicePort = dev;
 		take_head->direct = 1;
 		take_head->framelength = QLinkList[dev]->next->size + SIZEOF_STRUCT_PACKHEAD;
-		pbuf_encode((*buf),(u32*)QLinkList[dev]->next->start_postion,QLinkList[dev]->next->size,take_head);
+		(*buf)->pbuf_size = QLinkList[dev]->next->size + SIZEOF_STRUCT_PACKHEAD;
+		pbuf_encode((*buf)->pbuf,(u32*)QLinkList[dev]->next->start_postion,QLinkList[dev]->next->size,take_head);
 		myfree(SRAMIN ,take_head);
 		dev_port_detination = spi1_tx;
-	}else{
-//		memcpy((u32*)&(*buf)->head,(u32*)QLinkList[dev]->next->start_postion,SIZEOF_STRUCT_PACKHEAD);//QLinkList[dev]->next->size);//将接收缓存数据拷备至新建内存空间
-//		memcpy((*buf)->payload,(u32*)(QLinkList[dev]->next->start_postion+SIZEOF_STRUCT_PACKHEAD),QLinkList[dev]->next->size-SIZEOF_STRUCT_PACKHEAD);
-		
-		pdes =  (u8*)&(*buf)->head;
-		for(i = 0; i < SIZEOF_STRUCT_PACKHEAD;i++){
-			*pdes++ = DeQueue(cir_buf[dev]);
-		}
-		pdes =  (u8*)&(*buf)->payload;
-		pdes += 4;
-		for(i = 0; i < (QLinkList[dev]->next->size-SIZEOF_STRUCT_PACKHEAD);i++){
-			*pdes++ = DeQueue(cir_buf[dev]);
-		}
-		
-		dev_port_detination = (*buf)->head.DevicePort+uart1_tx-1;
-		(*buf)->head.framelength = QLinkList[dev]->next->size;
+		(*buf)->dat_dst_port = spi1_tx;
 	}
 	ClearOfQueue(cir_buf[dev]);//清除缓存中接收的数据
 	DeleteLink(QLinkList[dev]);
@@ -366,6 +357,49 @@ device_type DataRec(device_type dev, struct pbuf **buf)
 		received_buffer_flag &= ~0x20;//清除spi1—rx接收标志位
 	}
 	return dev_port_detination;
+	
+//	u32 *p = NULL;
+//	device_type dev_port_detination;
+//	u16 i;
+//	u8 *psrc = NULL,*pdes = NULL;
+//	
+//	(*buf) = (struct pbuf *)pbuf_alloc(512);//申请一个内存空间
+//	(*buf)->next = NULL;
+//	*((*buf)->payload) = ((u32)(*buf)+SIZEOF_STRUCT_PACKHEAD+4);
+//	p = (u32 *)*buf;
+//	if(dev < spi1_rx){
+//		take_head = (struct pack_head*)mymalloc(SRAMIN,SIZEOF_STRUCT_PACKHEAD);
+//		reset_head(take_head);
+//		take_head->DevicePort = dev;
+//		take_head->direct = 1;
+//		take_head->framelength = QLinkList[dev]->next->size + SIZEOF_STRUCT_PACKHEAD;
+//		pbuf_encode((*buf),(u32*)QLinkList[dev]->next->start_postion,QLinkList[dev]->next->size,take_head);
+//		myfree(SRAMIN ,take_head);
+//		dev_port_detination = spi1_tx;
+//	}else{
+////		memcpy((u32*)&(*buf)->head,(u32*)QLinkList[dev]->next->start_postion,SIZEOF_STRUCT_PACKHEAD);//QLinkList[dev]->next->size);//将接收缓存数据拷备至新建内存空间
+////		memcpy((*buf)->payload,(u32*)(QLinkList[dev]->next->start_postion+SIZEOF_STRUCT_PACKHEAD),QLinkList[dev]->next->size-SIZEOF_STRUCT_PACKHEAD);
+//		
+//		pdes =  (u8*)&(*buf)->head;
+//		for(i = 0; i < SIZEOF_STRUCT_PACKHEAD;i++){
+//			*pdes++ = DeQueue(cir_buf[dev]);
+//		}
+//		pdes =  (u8*)&(*buf)->payload;
+//		pdes += 4;
+//		for(i = 0; i < (QLinkList[dev]->next->size-SIZEOF_STRUCT_PACKHEAD);i++){
+//			*pdes++ = DeQueue(cir_buf[dev]);
+//		}
+//		
+//		dev_port_detination = (*buf)->head.DevicePort+uart1_tx-1;
+//		(*buf)->head.framelength = QLinkList[dev]->next->size;
+//	}
+//	ClearOfQueue(cir_buf[dev]);//清除缓存中接收的数据
+//	DeleteLink(QLinkList[dev]);
+//	
+//	if(QLinkList[dev]->next == NULL){
+//		received_buffer_flag &= ~0x20;//清除spi1—rx接收标志位
+//	}
+//	return dev_port_detination;
 }
 //input：dev：pbuf结构中指定的数据端口
 //       judge_p：pbuf结构数据包地址
@@ -396,11 +430,11 @@ u8 PackJudge(device_type *dev,struct pbuf *judge_p)
 //output：none
 //descript：pbuf结构数据送至spi接口缓冲区
 /**************************************pbuf结构数据送至spi接口缓冲区***********************/
-void pbuf_to_spi(device_type dev,struct pbuf *presendbuf)
+void pbuf_to_spi(device_type dev,struct PBUF *presendbuf)
 {
 	uint8_t i;
-	uint8_t *p = (uint8_t *)presendbuf;
-	uint16_t remin_len = presendbuf->head.framelength-8;
+	uint8_t *p = (uint8_t *)presendbuf->pbuf;
+	uint16_t remin_len = presendbuf->pbuf_size-8;
 	uint16_t count = 0;
 	
 	p = p + 4;
@@ -430,28 +464,28 @@ void query_uart_data_take(device_type dev, struct pbuf *Assgin_p)
 //output：none
 //descript：数据指令与对应处理流程
 /************************************数据指令与对应处理流程*************************/
-void AssignOpration(u8 order,device_type dev,struct pbuf *Assgin_p)
+void AssignOpration(u8 order,device_type dev,struct PBUF *Assgin_p)
 {
 	struct pbuf *feedbackpack;
 	switch(order)
 	{
 		case 0://转发至下一级板卡
-			Assgin_p->head.DestinationCount -= 1;
-			spi1_to_spi2(Assgin_p);		
+			Assgin_p->pbuf->head.DestinationCount -= 1;
+			spi1_to_spi2(Assgin_p->pbuf);		
 			break;
 		case 1://配置参数
-			uartpara[dev-6].buadrate = *Assgin_p->payload;
-			uartpara[dev-6].preemptionpriority = *((u32*)((u32)Assgin_p->payload+1));
-			uartpara[dev-6].subpriority = *((u32*)(((u32)Assgin_p->payload+2)));
+			uartpara[dev-6].buadrate = *Assgin_p->pbuf->payload;
+			uartpara[dev-6].preemptionpriority = *((u32*)((u32)Assgin_p->pbuf->payload+1));
+			uartpara[dev-6].subpriority = *((u32*)(((u32)Assgin_p->pbuf->payload+2)));
 			uart_init(COM_USART[dev-6],uartpara[dev-6].buadrate,uartpara[dev-6].preemptionpriority,uartpara[dev-6].subpriority);
 			printf("uart config baud = 9600 success!\r\n");
 		break;
 		case 2://查询参数
-			query_uart_data_take(dev-6,Assgin_p);
+			query_uart_data_take(dev-6,Assgin_p->pbuf);
 			pbuf_to_spi(spi1_tx,Assgin_p);
 			break;
 		case 3://转发至串口
-			spi_to_uart(dev,Assgin_p);
+			spi_to_uart(dev,Assgin_p->pbuf);
 			break;
 		case 4://回传至spi1，上传上级板卡
 			pbuf_to_spi(dev,Assgin_p);
@@ -485,7 +519,7 @@ void QueueDataSend(device_type output_dev_port)
 //output：none
 //descript：底层输入数据接口
 /**************************************底层输入数据接口***********************/
-device_type low_level_input(device_type dev, struct pbuf **buf)
+device_type low_level_input(device_type dev, struct PBUF **buf)
 {
 	device_type dev_port_destination;
 	dev_port_destination = DataRec(dev,buf);//将数据从SPI缓存中取出放入pbuf结构
@@ -494,11 +528,11 @@ device_type low_level_input(device_type dev, struct pbuf **buf)
 //input：dev：输入的数据端口号。buf：pbuf结构数据地址
 //output：none
 //descript：应用层对接收到pbuf结构中的数据进行处理
-void apply_layer_ctl(device_type dev, struct pbuf *buf)
+void apply_layer_ctl(device_type dev, struct PBUF *buf)
 {
 	u8 res;
 
-	res=PackJudge(&dev,buf);//判定该包数据的作用对象及是否已经为目标板卡
+	res=PackJudge(&dev,buf->pbuf);//判定该包数据的作用对象及是否已经为目标板卡
 	AssignOpration(res,dev,buf);//根据作用对象做不同处理
 	pbuf_free(buf);//释放申请内存
 }
@@ -513,7 +547,7 @@ void low_level_output(device_type output_dev_port)
 //input：data_input_dev_port:输入数据的端口号。buf：pbuf结构地址，用于数据的接收
 //output：返回该数据包的最终作用端口
 //descript：从环形buffer中将数据取出并放入pbuf结构中
-device_type apply_layer_getdata(device_type data_input_dev_port, struct pbuf **buf)
+device_type apply_layer_getdata(device_type data_input_dev_port, struct PBUF **buf)
 {
 	device_type dev_port_destination;
 	dev_port_destination = low_level_input(data_input_dev_port,buf);
@@ -525,28 +559,33 @@ device_type apply_layer_getdata(device_type data_input_dev_port, struct pbuf **b
 /****************************************应用层输入数据接口********************/
 void apply_layer_input(device_type data_pack_src_dev)
 {
-	struct pbuf *pre_pbuf = NULL;
+//	struct pbuf *pre_pbuf = NULL;
+	struct PBUF *pre_pbuf = NULL;
 	device_type destination_dev_port;
 	uint8_t dat;
 	
 	if(QLinkList[spi1_rx]->next->size<8){
 			GPIO_SetBits(GPIOA,GPIO_Pin_12);
-		if(*(u8*)QLinkList[data_pack_src_dev]->next->start_postion == 0xFF){
+		dat = *(u8*)QLinkList[data_pack_src_dev]->next->start_postion;
+		if(dat == 0xFF){
 				dat = DeQueue(cir_buf[spi1_tx]);
 				SPI_WriteByte(SPI1,dat);
 				DeleteLink(QLinkList[spi1_tx]);
-		}else if(*(u8*)QLinkList[data_pack_src_dev]->next->start_postion == 0xaa){
-			if(SPI1->DR != 0x00){
-				dat = DeQueue(cir_buf[spi1_tx]);
-				SPI_WriteByte(SPI1,dat);
-				DeleteLink(QLinkList[spi1_tx]);
-			}
+		}else if(dat == 0xaa){
+//				dat = DeQueue(cir_buf[spi1_tx]);
+//				SPI_WriteByte(SPI1,dat);
+//				DeleteLink(QLinkList[spi1_tx]);
+				/**/
+					SPI_WriteByte(SPI1,(u8)(spi1_feedback_len));
+				
 		}else{
 //			printf("spi1 rx fe not fill\r\n");
 		}
+	
 		GPIO_ResetBits(GPIOA,GPIO_Pin_12);
 		DeQueue(cir_buf[spi1_rx]);
 		DeleteLink(QLinkList[spi1_rx]);
+		
 	}else{
 		destination_dev_port = apply_layer_getdata(data_pack_src_dev,&pre_pbuf);
 		apply_layer_ctl(destination_dev_port,pre_pbuf);

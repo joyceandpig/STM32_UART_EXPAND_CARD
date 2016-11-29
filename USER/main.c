@@ -19,14 +19,14 @@ const u8 TEXT_TO_SEND[]={"板卡扩展"};
 u8 SendBuff[(TEXT_LENTH+2)*100];
 
 											 //len direct cnt port query config protocalVer expand
-uint8_t frame_head[] =  {37,0,0,1,0,0,0,1};
-uint8_t frame_head_to_spi2[] =  {11,0,0,1,0,0,0,1};
+uint8_t frame_head[] =  {37,0,1,1,0,0,0,1};
+uint8_t frame_head_to_spi2[] =  {11,0,1,1,0,0,0,1};
 const u8 *test_to_uart="Test Data from spi1 to uart\r\n";
 const u8 *test_to_spi2="Test Data from spi1 to spi2\r\n";
 const u8 *uart_to_spi1="Test Data from uart to spi1\r\n";
 
-uint8_t frame_head_config[] = {11,0,0,1,0,1,0,1};
-uint8_t test_to_query[] =     {11,0,0,1,1,0,0,1};
+uint8_t frame_head_config[] = {11,0,1,1,0,1,0,1};
+uint8_t test_to_query[] =     {11,0,1,1,1,0,0,1};
 //baud prority
 uint8_t test_to_config[3] = {1,0,1};
 //uint8_t test_to_spi2[] = {};
@@ -113,11 +113,13 @@ void system_bsp_init(void)
 }
 int main(void)
 { 
-	uint8_t i = 0,j = 0;
+	uint8_t i = 0;
 	uint32_t cnt = 0;
 	uint8_t key_val = 0;
-	uint8_t spi2_rec_len = 0;
+	uint16_t spi2_rec_len = 0,j = 0;
 	uint8_t spi2_rec_val;
+	uint8_t spi2_rx_status =0;
+	uint8_t spi2_rx_h,spi2_rx_l;
 	system_bsp_init();
 	while(1)
 	{
@@ -134,43 +136,54 @@ int main(void)
 		}else if(key_val == KEY0_PRES){
 			test_config(1);
 		}
-		
+		if(!StartSPI2RecData_flag){
+			if(QLinkList[spi1_rx]->next != NULL){
+				apply_layer_input(spi1_rx);
+			}
 			if(QLinkList[i]->next != NULL){
 				apply_layer_input(i);
 			}
 			if(QLinkList[i+uart1_tx]->next != NULL){
 				apply_layer_output(i+uart1_tx);
 			}
-
+		}
+			//spi从机有数据发送回来
 			if(StartSPI2RecData_flag){
-				//get spi slaver send length
-				//according length to read data from spi slaver and save 
-				//end spi slaver feedback
-				if(!spi2_getpack){
+				switch(spi2_rx_status){
+				case 0://接收数据长度高位
 					spi2_rec_len = SPI_ReadWriteByte(SPI2,0xaa);
+					spi2_rx_status = 1;
+					break;
+				case 1://接收数据长度低位
+					spi2_rec_len = (spi2_rec_len << 8)|SPI_ReadWriteByte(SPI2,0xaa);
 					printf("spi2 rec len :%d \r\n",spi2_rec_len-8);
-				}
-				if(spi2_getpack){
-					if(j == spi2_rec_len){
-						spi2_getpack = 0;
-						j = 0;
-						printf(/*"\r\nspi2 rec end*/"\r\n");
-//						InsertLink(QLinkList[spi2_rx],spi2_rec_len,(u32)(cir_buf[spi2_rx]->rear));
-						goto out;
-					}
+					spi2_rx_status = 2;
+					if(spi2_rec_len > MEMP_BUF_LAYER_TYPE_SIZE)
+						spi2_rx_status = 0;
+					break;
+				case 2://接收真正的数据
 					j++;
+					spi2_rec_val = SPI_ReadWriteByte(SPI2,0xFF);
 					if(j == spi2_rec_len){
+						spi2_rx_status = 3;
+					}
+				  if(j>8){
+						usart_send(0,spi2_rec_val);
+					}
+					break;
+				case 3://接收最后一个数据，并重置状态机及计数变量
 					spi2_rec_val = SPI_ReadWriteByte(SPI2,0xFE);
-					}
-					else {spi2_rec_val = SPI_ReadWriteByte(SPI2,0xFF);}
-					if(j>8){
 					usart_send(0,spi2_rec_val);
-					}
-//					printf("spi2 received %d data is: %x \r\n",j,spi2_rec_val);
-					EnQueue(cir_buf[spi2_rx],spi2_rec_val);
+					j = 0;
+					printf("\r\nspi2 rec end");
+					printf("\r\n");
+					spi2_rx_status = 4;
+					break;
+				case 4:
+					spi2_rx_status = 0;
+					break;
 				}
-				spi2_getpack = 1;
-out:		StartSPI2RecData_flag = 0;
+				StartSPI2RecData_flag = 0;
 			}
 			if(i == 5){
 				i = 255;

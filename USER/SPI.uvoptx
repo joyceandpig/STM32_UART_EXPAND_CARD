@@ -144,7 +144,7 @@
         <SetRegEntry>
           <Number>0</Number>
           <Key>DLGUARM</Key>
-          <Name></Name>
+          <Name>/</Name>
         </SetRegEntry>
         <SetRegEntry>
           <Number>0</Number>
@@ -181,9 +181,9 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>538</LineNumber>
+          <LineNumber>259</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134239078</Address>
+          <Address>134237940</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -192,14 +192,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\SPI\../common/common.c\538</Expression>
+          <Expression>\\SPI\../common/common.c\259</Expression>
         </Bp>
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>349</LineNumber>
+          <LineNumber>579</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134238234</Address>
+          <Address>134239120</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -208,14 +208,14 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\SPI\../common/common.c\349</Expression>
+          <Expression>\\SPI\../common/common.c\579</Expression>
         </Bp>
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>355</LineNumber>
+          <LineNumber>571</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134238272</Address>
+          <Address>134239096</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -224,7 +224,23 @@
           <BreakIfRCount>1</BreakIfRCount>
           <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
           <ExecCommand></ExecCommand>
-          <Expression>\\SPI\../common/common.c\355</Expression>
+          <Expression>\\SPI\../common/common.c\571</Expression>
+        </Bp>
+        <Bp>
+          <Number>3</Number>
+          <Type>0</Type>
+          <LineNumber>567</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134239062</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>X:\Users\slayer\Desktop\V2.0 涓插彛鎵╁睍鏉垮崱浠ｇ爜\涓插彛鎵╁睍鏉垮崱浠ｇ爜\common\common.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\SPI\../common/common.c\567</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -355,7 +371,7 @@
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>0x2000a364</ItemText>
+          <ItemText>0x20009784</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>
@@ -405,7 +421,7 @@
 
   <Group>
     <GroupName>USER</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

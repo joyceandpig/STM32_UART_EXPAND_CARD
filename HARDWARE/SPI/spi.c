@@ -46,7 +46,7 @@ void SPI1_Init(void)
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;		//选择了串行时钟的稳态:时钟悬空高
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;	//数据捕获于第二个时钟沿
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;		//NSS信号由硬件（NSS管脚）还是软件（使用SSI位）管理:内部NSS信号有SSI位控制
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;		//定义波特率预分频的值:波特率预分频值为256
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;//SPI_BaudRatePrescaler_256;		//定义波特率预分频的值:波特率预分频值为256
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;	//指定数据传输从MSB位还是LSB位开始:数据传输从MSB位开始
 	SPI_InitStructure.SPI_CRCPolynomial = 7;	//CRC值计算的多项式
 	
@@ -92,7 +92,7 @@ void SPI2_Init(void)
     SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;        //设备空闲状态时同步时钟SCK的状态，High表示高电平，Low表示低电平
     SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;    //时钟相位，1表示在同步时钟SCK的奇数沿边采样，2表示偶数沿边采样
     SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;        //NSS由软件控件片选
-    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;//时钟的预分频值
+    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;//SPI_BaudRatePrescaler_256;//时钟的预分频值
     SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;    //MSB高位在前
     SPI_InitStructure.SPI_CRCPolynomial = 7;    //CRC较验和的多项式
 		
@@ -221,8 +221,6 @@ void SPI1_IRQHandler(void)
 		TIM_Cmd(TIM3,DISABLE);
 		TIM_SetCounter(TIM3,0);
 		TIM_Cmd(TIM3,ENABLE);
-		
-		
 		
 //		SPI_ReadWriteByte(SPI1,0xFF);
 		dat = SPI_ReadByte(SPI1);
